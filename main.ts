@@ -3,6 +3,6 @@ import { generateProject } from './generate.ts';
 
 const program = new Command('danet');
 
-program.command('new <name>').action(generateProject);
+program.command('new').arguments('<name:string>').action(generateProject);
 
-program.parse(Deno.args);
+await program.parse(Deno.args);

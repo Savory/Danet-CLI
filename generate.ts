@@ -27,7 +27,7 @@ async function cloneRepositoryAndDeleteGitFolder(name) {
 	}
 	await rmdir(toPathString(`${name}/.git`), { recursive: true });
 }
-export async function generateProject(name) {
+export async function generateProject(options, name) {
 	if (existsSync(name)) {
 		await overwriteIfPossibleOrQuit(name);
 	}
