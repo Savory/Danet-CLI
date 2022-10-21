@@ -1,0 +1,14 @@
+{
+	"fmt": {
+		"options": {
+			"singleQuote": true,
+			"useTabs": true
+		},
+		"files": {
+			"exclude": ["node_modules/", "coverage/", "doc/"]
+		}
+	},
+	"tasks": {
+		"run": "deno run --allow-read --allow-write --allow-run --allow-env main.ts"
+	}
+}
