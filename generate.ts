@@ -20,6 +20,8 @@ async function cloneRepositoryAndDeleteGitFolder(name) {
 	logger.log(`Cloning starter project from ${repository} into ${name}`);
 	const p = Deno.run({
 		cmd: ['git', 'clone', repository, `${name}`],
+		stdout: "null",
+		stderr: "null"
 	});
 	const status = await p.status();
 	if (!status.success) {
@@ -28,10 +30,14 @@ async function cloneRepositoryAndDeleteGitFolder(name) {
 	await rmdir(toPathString(`${name}/.git`), { recursive: true });
 }
 export async function generateProject(options, name) {
-	if (existsSync(name)) {
-		await overwriteIfPossibleOrQuit(name);
-	}
-	await cloneRepositoryAndDeleteGitFolder(name);
-	logger.log(`Danet's project creation done !
+	try {
+		if (existsSync(name)) {
+			await overwriteIfPossibleOrQuit(name);
+		}
+		await cloneRepositoryAndDeleteGitFolder(name);
+		logger.log(`Danet's project creation done !
   You can run it doing the following commands: cd ${name} && deno task launch-server`);
+	} catch (e) {
+		logger.error(e.toString());
+	}
 }
