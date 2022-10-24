@@ -1,8 +1,164 @@
-import { existsSync, Logger, rmdir, toPathString } from './deps.ts';
-
+import {
+	existsSync,
+	Logger,
+	rm,
+	rmdir,
+	toPathString,
+	Project,
+	ResolutionHosts,
+	Directory,
+	SourceFile,
+	Decorator,
+	ClassDeclaration,
+	IndentationText
+} from './deps.ts';
 const logger = new Logger('Danet-CLI');
 
-async function overwriteIfPossibleOrQuit(name) {
+export async function generateProject(options: GenerateOption, name: string) {
+	try {
+		if (existsSync(name)) {
+			await overwriteIfPossibleOrQuit(name);
+		}
+		await cloneRepositoryAndDeleteGitFolder(name);
+		await setupDatabaseCode(options, name);
+		logger.log(`Danet's project creation done !
+  You can run it with the following commands: cd ${name} && deno task launch-server
+  Tests can be run with: deno task test`);
+	} catch (e) {
+		logger.error(e.toString());
+	}
+}
+
+const capitalize = (myString: string) => {
+	return myString.charAt(0).toUpperCase() + myString.slice(1);
+}
+
+class GenerateOption {
+	mongodb?: boolean;
+	postgres?: boolean;
+	inMemory?: boolean;
+}
+
+const possibleDatabases = ['mongodb', 'postgres', 'in-memory'];
+
+async function setupDatabaseCode(options: GenerateOption, projectDirectory: string) {
+	let databaseName: string = await getDatabaseFromOptionOrAskUser(options);
+	await deleteOtherDatabaseCode(databaseName, projectDirectory);
+	if (databaseName !== 'in-memory') {
+		await modifyModulesWithDatabaseService(databaseName, projectDirectory);
+	} else {
+		logger.log('Keeping code as is due to in-memory being selected');
+		await rmdir(toPathString(`${projectDirectory}/src/database`), { recursive: true });
+		logger.log('Deleting database folder')
+	}
+}
+
+async function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
+	let database = '';
+	if (!options.mongodb && !options.postgres && !options.inMemory) {
+		database = await askWhichDBUserWants();
+	} else if (options.mongodb) {
+		database = 'mongodb'
+	} else if (options.postgres) {
+		database = 'postgres'
+	} else {
+		database = 'in-memory'
+	}
+	return database;
+}
+
+function modifyDatabaseModule(baseDirectory, databaseName: string) {
+	const dbDirectory: Directory = baseDirectory?.getDirectory('src/database');
+	const dbModuleFile: SourceFile = dbDirectory?.getSourceFile('module.ts');
+	let importDeclaration = dbModuleFile.getImportDeclarations()[1];
+	importDeclaration.remove();
+	dbModuleFile.addImportDeclaration({
+		defaultImport: `{ ${capitalize(databaseName)}Service }`,
+		moduleSpecifier: `./${databaseName}.service.ts`,
+	});
+	const DatabaseClass: ClassDeclaration = dbModuleFile?.getClassOrThrow('DatabaseModule');
+	const ModuleDeclaration = DatabaseClass.getDecorators().find(d => d.getName() === 'Module');
+	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
+	const argumentProperties = moduleDeclarationArgument.getProperties();
+	const moduleInjectables = argumentProperties.find(p => p.getName() === 'injectables');
+	moduleInjectables.set(
+		{
+			name: 'injectables',
+			kind: 32,
+			initializer: `[new TokenInjector(${capitalize(databaseName)}Service, DATABASE)]`
+		}
+	);
+	logger.log(`Declaration and export of ${capitalize(databaseName)}Service from DatabaseModule`);
+}
+
+function modifyTodoModule(baseDirectory, databaseName: string) {
+	const dbDirectory: Directory = baseDirectory?.getDirectory('src/todo');
+	const todoModule: SourceFile = dbDirectory?.getSourceFile('module.ts');
+	let importDeclaration = todoModule.getImportDeclarations()[4];
+	importDeclaration.remove();
+	todoModule.addImportDeclaration({
+		defaultImport: `{ ${capitalize(databaseName)}Repository }`,
+		moduleSpecifier: `./${databaseName}-repository.ts`,
+	});
+	todoModule.addImportDeclaration({
+		defaultImport: `{ DatabaseModule }`,
+		moduleSpecifier: `../database/module.ts`,
+	});
+	const DatabaseClass: ClassDeclaration = todoModule?.getClassOrThrow('TodoModule');
+	const ModuleDeclaration = DatabaseClass.getDecorators().find(d => d.getName() === 'Module');
+	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
+	const argumentProperties = moduleDeclarationArgument.getProperties();
+	moduleDeclarationArgument.addProperty({
+		name: 'imports',
+		kind: 32,
+		initializer: `[DatabaseModule]`
+	});
+	const moduleInjectables = argumentProperties.find(p => p.getName() === 'injectables');
+	moduleInjectables.set(
+		{
+			name: 'injectables',
+			kind: 32,
+			initializer: `[new TokenInjector(${capitalize(databaseName)}Repository, USER_REPOSITORY), TodoService]`
+		}
+	);
+	logger.log(`Declaration and injection of ${capitalize(databaseName)}Repository in TodoModule`);
+}
+
+async function modifyModulesWithDatabaseService(databaseName: string, projectDirectory: string) {
+	const project = new Project({
+		resolutionHost: ResolutionHosts.deno,
+		indentationText: IndentationText.TwoSpaces
+	});
+	project.addSourceFilesAtPaths(`${projectDirectory}/**/*.ts`);
+	const baseDirectory = project.getDirectory(`${projectDirectory}`);
+	modifyDatabaseModule(baseDirectory, databaseName);
+	modifyTodoModule(baseDirectory, databaseName);
+	await project.save();
+}
+
+async function deleteOtherDatabaseCode(databaseName: string, projectDirectory: string) {
+	for (const dbName of possibleDatabases) {
+		if (dbName !== databaseName) {
+			if (dbName !== 'in-memory') {
+				await rm(`${projectDirectory}/src/database/${dbName}.service.ts`);
+			}
+			await rm(`${projectDirectory}/src/todo/${dbName}-repository.ts`);
+		}
+	}
+}
+
+async function askWhichDBUserWants() {
+	let database: string = '';
+	while (!possibleDatabases.includes(database)) {
+		database = prompt(
+			`What database provider do you want to use ? (mongodb/postgres/in-memory)`,
+			'mongodb',
+		) as string;
+	}
+	return database;
+}
+
+async function overwriteIfPossibleOrQuit(name: string) {
 	const overwrite: string = prompt(
 		`${name} folder already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
@@ -15,7 +171,7 @@ async function overwriteIfPossibleOrQuit(name) {
 	await rmdir(name, { recursive: true });
 }
 
-async function cloneRepositoryAndDeleteGitFolder(name) {
+async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	const repository = `https://github.com/Savory/Danet-Starter.git`;
 	logger.log(`Cloning starter project from ${repository} into ${name}`);
 	const p = Deno.run({
@@ -28,16 +184,4 @@ async function cloneRepositoryAndDeleteGitFolder(name) {
 		throw new Error('Clone Failed');
 	}
 	await rmdir(toPathString(`${name}/.git`), { recursive: true });
-}
-export async function generateProject(options, name) {
-	try {
-		if (existsSync(name)) {
-			await overwriteIfPossibleOrQuit(name);
-		}
-		await cloneRepositoryAndDeleteGitFolder(name);
-		logger.log(`Danet's project creation done !
-  You can run it doing the following commands: cd ${name} && deno task launch-server`);
-	} catch (e) {
-		logger.error(e.toString());
-	}
 }
