@@ -11,4 +11,5 @@ export {
 	Project,
 	ResolutionHosts,
 	SourceFile,
+	StructureKind,
 } from 'https://deno.land/x/ts_morph@16.0.0/mod.ts';

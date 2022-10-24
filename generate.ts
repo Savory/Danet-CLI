@@ -9,6 +9,7 @@ import {
 	rm,
 	rmdir,
 	SourceFile,
+	StructureKind,
 	toPathString,
 } from './deps.ts';
 const logger = new Logger('Danet-CLI');
@@ -94,7 +95,7 @@ function modifyDatabaseModule(baseDirectory, databaseName: string) {
 	moduleInjectables.set(
 		{
 			name: 'injectables',
-			kind: 32,
+			kind: StructureKind.PropertyAssignment,
 			initializer: `[new TokenInjector(${
 				capitalize(databaseName)
 			}Service, DATABASE)]`,
@@ -130,7 +131,7 @@ function modifyTodoModule(baseDirectory, databaseName: string) {
 	const argumentProperties = moduleDeclarationArgument.getProperties();
 	moduleDeclarationArgument.addProperty({
 		name: 'imports',
-		kind: 32,
+		kind: StructureKind.PropertyAssignment,
 		initializer: `[DatabaseModule]`,
 	});
 	const moduleInjectables = argumentProperties.find((p) =>
@@ -192,7 +193,7 @@ function askWhichDBUserWants() {
 	return database;
 }
 
-function overwriteIfPossibleOrQuit(name: string) {
+async function overwriteIfPossibleOrQuit(name: string) {
 	const overwrite: string = prompt(
 		`${name} folder already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
