@@ -8,8 +8,8 @@
 
 ## Description
 
-
-The Danet CLI is a command-line interface tool that helps you to initialize your Danet applications.
+The Danet CLI is a command-line interface tool that helps you to initialize your
+Danet applications.
 
 ## Installation
 
@@ -19,7 +19,8 @@ $ deno install --allow-read --allow-write --allow-run --allow-env -n danet https
 
 ## Usage
 
-The only available command for now is to create a new Danet project. To do so, run the following command: 
+The only available command for now is to create a new Danet project. To do so,
+run the following command:
 
 ```
 $ danet new <yourprojectname>

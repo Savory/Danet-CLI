@@ -1,16 +1,15 @@
 import {
+	ClassDeclaration,
+	Directory,
 	existsSync,
+	IndentationText,
 	Logger,
-	rm,
-	rmdir,
-	toPathString,
 	Project,
 	ResolutionHosts,
-	Directory,
+	rm,
+	rmdir,
 	SourceFile,
-	Decorator,
-	ClassDeclaration,
-	IndentationText
+	toPathString,
 } from './deps.ts';
 const logger = new Logger('Danet-CLI');
 
@@ -29,40 +28,45 @@ export async function generateProject(options: GenerateOption, name: string) {
 	}
 }
 
-const capitalize = (myString: string) => {
-	return myString.charAt(0).toUpperCase() + myString.slice(1);
-}
-
-class GenerateOption {
+interface GenerateOption {
 	mongodb?: boolean;
 	postgres?: boolean;
 	inMemory?: boolean;
 }
 
+const capitalize = (myString: string) => {
+	return myString.charAt(0).toUpperCase() + myString.slice(1);
+};
+
 const possibleDatabases = ['mongodb', 'postgres', 'in-memory'];
 
-async function setupDatabaseCode(options: GenerateOption, projectDirectory: string) {
-	let databaseName: string = await getDatabaseFromOptionOrAskUser(options);
+async function setupDatabaseCode(
+	options: GenerateOption,
+	projectDirectory: string,
+) {
+	const databaseName: string = getDatabaseFromOptionOrAskUser(options);
 	await deleteOtherDatabaseCode(databaseName, projectDirectory);
 	if (databaseName !== 'in-memory') {
 		await modifyModulesWithDatabaseService(databaseName, projectDirectory);
 	} else {
 		logger.log('Keeping code as is due to in-memory being selected');
-		await rmdir(toPathString(`${projectDirectory}/src/database`), { recursive: true });
-		logger.log('Deleting database folder')
+		await rmdir(toPathString(`${projectDirectory}/src/database`), {
+			recursive: true,
+		});
+		logger.log('Deleting database folder');
 	}
 }
 
-async function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
+function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
 	let database = '';
 	if (!options.mongodb && !options.postgres && !options.inMemory) {
-		database = await askWhichDBUserWants();
+		database = askWhichDBUserWants();
 	} else if (options.mongodb) {
-		database = 'mongodb'
+		database = 'mongodb';
 	} else if (options.postgres) {
-		database = 'postgres'
+		database = 'postgres';
 	} else {
-		database = 'in-memory'
+		database = 'in-memory';
 	}
 	return database;
 }
@@ -70,31 +74,43 @@ async function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
 function modifyDatabaseModule(baseDirectory, databaseName: string) {
 	const dbDirectory: Directory = baseDirectory?.getDirectory('src/database');
 	const dbModuleFile: SourceFile = dbDirectory?.getSourceFile('module.ts');
-	let importDeclaration = dbModuleFile.getImportDeclarations()[1];
+	const importDeclaration = dbModuleFile.getImportDeclarations()[1];
 	importDeclaration.remove();
 	dbModuleFile.addImportDeclaration({
 		defaultImport: `{ ${capitalize(databaseName)}Service }`,
 		moduleSpecifier: `./${databaseName}.service.ts`,
 	});
-	const DatabaseClass: ClassDeclaration = dbModuleFile?.getClassOrThrow('DatabaseModule');
-	const ModuleDeclaration = DatabaseClass.getDecorators().find(d => d.getName() === 'Module');
+	const DatabaseClass: ClassDeclaration = dbModuleFile?.getClassOrThrow(
+		'DatabaseModule',
+	);
+	const ModuleDeclaration = DatabaseClass.getDecorators().find((d) =>
+		d.getName() === 'Module'
+	);
 	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
 	const argumentProperties = moduleDeclarationArgument.getProperties();
-	const moduleInjectables = argumentProperties.find(p => p.getName() === 'injectables');
+	const moduleInjectables = argumentProperties.find((p) =>
+		p.getName() === 'injectables'
+	);
 	moduleInjectables.set(
 		{
 			name: 'injectables',
 			kind: 32,
-			initializer: `[new TokenInjector(${capitalize(databaseName)}Service, DATABASE)]`
-		}
+			initializer: `[new TokenInjector(${
+				capitalize(databaseName)
+			}Service, DATABASE)]`,
+		},
 	);
-	logger.log(`Declaration and export of ${capitalize(databaseName)}Service from DatabaseModule`);
+	logger.log(
+		`Declaration and export of ${
+			capitalize(databaseName)
+		}Service from DatabaseModule`,
+	);
 }
 
 function modifyTodoModule(baseDirectory, databaseName: string) {
 	const dbDirectory: Directory = baseDirectory?.getDirectory('src/todo');
 	const todoModule: SourceFile = dbDirectory?.getSourceFile('module.ts');
-	let importDeclaration = todoModule.getImportDeclarations()[4];
+	const importDeclaration = todoModule.getImportDeclarations()[4];
 	importDeclaration.remove();
 	todoModule.addImportDeclaration({
 		defaultImport: `{ ${capitalize(databaseName)}Repository }`,
@@ -104,30 +120,45 @@ function modifyTodoModule(baseDirectory, databaseName: string) {
 		defaultImport: `{ DatabaseModule }`,
 		moduleSpecifier: `../database/module.ts`,
 	});
-	const DatabaseClass: ClassDeclaration = todoModule?.getClassOrThrow('TodoModule');
-	const ModuleDeclaration = DatabaseClass.getDecorators().find(d => d.getName() === 'Module');
+	const DatabaseClass: ClassDeclaration = todoModule?.getClassOrThrow(
+		'TodoModule',
+	);
+	const ModuleDeclaration = DatabaseClass.getDecorators().find((d) =>
+		d.getName() === 'Module'
+	);
 	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
 	const argumentProperties = moduleDeclarationArgument.getProperties();
 	moduleDeclarationArgument.addProperty({
 		name: 'imports',
 		kind: 32,
-		initializer: `[DatabaseModule]`
+		initializer: `[DatabaseModule]`,
 	});
-	const moduleInjectables = argumentProperties.find(p => p.getName() === 'injectables');
+	const moduleInjectables = argumentProperties.find((p) =>
+		p.getName() === 'injectables'
+	);
 	moduleInjectables.set(
 		{
 			name: 'injectables',
 			kind: 32,
-			initializer: `[new TokenInjector(${capitalize(databaseName)}Repository, USER_REPOSITORY), TodoService]`
-		}
+			initializer: `[new TokenInjector(${
+				capitalize(databaseName)
+			}Repository, USER_REPOSITORY), TodoService]`,
+		},
 	);
-	logger.log(`Declaration and injection of ${capitalize(databaseName)}Repository in TodoModule`);
+	logger.log(
+		`Declaration and injection of ${
+			capitalize(databaseName)
+		}Repository in TodoModule`,
+	);
 }
 
-async function modifyModulesWithDatabaseService(databaseName: string, projectDirectory: string) {
+async function modifyModulesWithDatabaseService(
+	databaseName: string,
+	projectDirectory: string,
+) {
 	const project = new Project({
 		resolutionHost: ResolutionHosts.deno,
-		indentationText: IndentationText.TwoSpaces
+		indentationText: IndentationText.TwoSpaces,
 	});
 	project.addSourceFilesAtPaths(`${projectDirectory}/**/*.ts`);
 	const baseDirectory = project.getDirectory(`${projectDirectory}`);
@@ -136,7 +167,10 @@ async function modifyModulesWithDatabaseService(databaseName: string, projectDir
 	await project.save();
 }
 
-async function deleteOtherDatabaseCode(databaseName: string, projectDirectory: string) {
+async function deleteOtherDatabaseCode(
+	databaseName: string,
+	projectDirectory: string,
+) {
 	for (const dbName of possibleDatabases) {
 		if (dbName !== databaseName) {
 			if (dbName !== 'in-memory') {
@@ -147,8 +181,8 @@ async function deleteOtherDatabaseCode(databaseName: string, projectDirectory: s
 	}
 }
 
-async function askWhichDBUserWants() {
-	let database: string = '';
+function askWhichDBUserWants() {
+	let database = '';
 	while (!possibleDatabases.includes(database)) {
 		database = prompt(
 			`What database provider do you want to use ? (mongodb/postgres/in-memory)`,
@@ -158,7 +192,7 @@ async function askWhichDBUserWants() {
 	return database;
 }
 
-async function overwriteIfPossibleOrQuit(name: string) {
+function overwriteIfPossibleOrQuit(name: string) {
 	const overwrite: string = prompt(
 		`${name} folder already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
@@ -176,8 +210,8 @@ async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	logger.log(`Cloning starter project from ${repository} into ${name}`);
 	const p = Deno.run({
 		cmd: ['git', 'clone', repository, `${name}`],
-		stdout: "null",
-		stderr: "null"
+		stdout: 'null',
+		stderr: 'null',
 	});
 	const status = await p.status();
 	if (!status.success) {
