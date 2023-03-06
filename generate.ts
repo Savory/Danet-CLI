@@ -1,13 +1,10 @@
 import {
 	ClassDeclaration,
 	Directory,
-	existsSync,
 	IndentationText,
 	Logger,
 	Project,
 	ResolutionHosts,
-	rm,
-	rmdir,
 	SourceFile,
 	StructureKind,
 	toPathString,
@@ -16,9 +13,7 @@ const logger = new Logger('Danet-CLI');
 
 export async function generateProject(options: GenerateOption, name: string) {
 	try {
-		if (existsSync(name)) {
-			await overwriteIfPossibleOrQuit(name);
-		}
+		await overwriteIfPossibleOrQuit(name);
 		await cloneRepositoryAndDeleteGitFolder(name);
 		await setupDatabaseCode(options, name);
 		logger.log(`Danet's project creation done !
@@ -51,9 +46,9 @@ async function setupDatabaseCode(
 		await modifyModulesWithDatabaseService(databaseName, projectDirectory);
 	} else {
 		logger.log('Keeping code as is due to in-memory being selected');
-		await rmdir(toPathString(`${projectDirectory}/src/database`), {
-			recursive: true,
-		});
+		// await Deno.remove(toPathString(`${projectDirectory}/src/database`), {
+		// 	recursive: true,
+		// });
 		logger.log('Deleting database folder');
 	}
 }
@@ -72,7 +67,7 @@ function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
 	return database;
 }
 
-function modifyDatabaseModule(baseDirectory, databaseName: string) {
+function modifyDatabaseModule(baseDirectory: Directory, databaseName: string) {
 	const dbDirectory: Directory = baseDirectory?.getDirectory('src/database');
 	const dbModuleFile: SourceFile = dbDirectory?.getSourceFile('module.ts');
 	const importDeclaration = dbModuleFile.getImportDeclarations()[1];
@@ -175,9 +170,9 @@ async function deleteOtherDatabaseCode(
 	for (const dbName of possibleDatabases) {
 		if (dbName !== databaseName) {
 			if (dbName !== 'in-memory') {
-				await rm(`${projectDirectory}/src/database/${dbName}.service.ts`);
+				await Deno.remove(`${projectDirectory}/src/database/${dbName}.service.ts`);
 			}
-			await rm(`${projectDirectory}/src/todo/${dbName}-repository.ts`);
+			await Deno.remove(`${projectDirectory}/src/todo/${dbName}-repository.ts`);
 		}
 	}
 }
@@ -195,15 +190,14 @@ function askWhichDBUserWants() {
 
 async function overwriteIfPossibleOrQuit(name: string) {
 	const overwrite: string = prompt(
-		`${name} folder already exists, do you want to completely overwrite its content ? (y/N)`,
+		`${name} folder may already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
 	);
-	if (overwrite.toLowerCase() !== 'y') {
-		logger.warn(`${name} already exists. Cannot create a new project.`);
-		Deno.exit(1);
+	try {
+		await Deno.remove(name, {recursive: true});
+	} catch (e) {
+		console.log(e);
 	}
-	logger.log(`Deleting ${name} folder`);
-	await rmdir(name, { recursive: true });
 }
 
 async function cloneRepositoryAndDeleteGitFolder(name: string) {
@@ -218,5 +212,5 @@ async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	if (!status.success) {
 		throw new Error('Clone Failed');
 	}
-	await rmdir(toPathString(`${name}/.git`), { recursive: true });
+	await Deno.remove(toPathString(`${name}/.git`), { recursive: true });
 }
