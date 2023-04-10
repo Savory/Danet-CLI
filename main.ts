@@ -1,5 +1,6 @@
 import { Command } from './deps.ts';
 import { generateProject } from './generate.ts';
+import { runProject, runProjectWithWatch } from "./run.ts";
 
 const program = new Command('danet');
 
@@ -8,5 +9,9 @@ program.command('new').arguments('<name:string>')
 	.option('--mongodb', 'Setup project with mongodb code')
 	.option('--in-memory', 'Setup project with in-memory code')
 	.action(generateProject);
+
+program.command('develop').action(runProjectWithWatch);
+
+program.command('start').action(runProject);
 
 await program.parse(Deno.args);
