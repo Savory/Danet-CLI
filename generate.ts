@@ -17,7 +17,7 @@ export async function generateProject(options: GenerateOption, name: string) {
 		await cloneRepositoryAndDeleteGitFolder(name);
 		await setupDatabaseCode(options, name);
 		logger.log(`Danet's project creation done !
-  You can run it with the following commands: cd ${name} && deno task launch-server
+  You can run it with the following commands: cd ${name} && danet develop
   Tests can be run with: deno task test`);
 	} catch (e) {
 		logger.error(e.toString());
@@ -193,10 +193,13 @@ async function overwriteIfPossibleOrQuit(name: string) {
 		`${name} folder may already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
 	);
-	try {
-		await Deno.remove(name, {recursive: true});
-	} catch (e) {
-		console.log(e);
+	if (overwrite.toLowerCase() === 'y') {
+		try {
+			await Deno.remove(name, {recursive: true});
+		} catch (e) {
+			if (e.name !== 'NotFound')
+				console.log(e);
+		}
 	}
 }
 
