@@ -3,7 +3,7 @@ import { generateProject } from './generate.ts';
 import { runProject, runProjectWithWatch } from "./run.ts";
 import { bundleProject } from "./bundle.ts";
 
-const program = new Command('danet');
+const program = new Command().name('danet').description('Danet CLI Interface');
 
 program.command('new').arguments('<name:string>')
 	.option('--postgres', 'Setup project with postgres code')
