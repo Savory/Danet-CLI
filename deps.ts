@@ -1,5 +1,4 @@
 export { Logger } from 'https://deno.land/x/danet/src/logger.ts';
-export { toPathString } from 'https://deno.land/std/fs/_util.ts';
 export { Command, HelpCommand } from 'https://deno.land/x/cliffy@v0.25.2/command/mod.ts';
 export {
 	ClassDeclaration,

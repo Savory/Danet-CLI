@@ -215,5 +215,5 @@ async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	if (!status.success) {
 		throw new Error('Clone Failed');
 	}
-	await Deno.remove(toPathString(`${name}/.git`), { recursive: true });
+	await Deno.remove(`./${name}/.git`, { recursive: true });
 }
