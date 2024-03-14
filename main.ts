@@ -33,7 +33,7 @@ program.command('bundle')
 	  })
 	.arguments('<name:string>').action(bundleProject);
 
-program.command('deploy').description('Deploy your project to Deno Deploy').option('-p, --project <project:string>', 'Deno deploy project name')
+program.command('deploy').description('Deploy your project to Deno Deploy').option('-p, --project <project:string>', 'Deno deploy project name. If no value is given, Deno deploy will generate a random name')
 .option('-e, --entrypoint <entrypoint:string>', 'Bundle entrypoint file', {
 	default: 'run.ts',
   })
