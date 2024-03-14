@@ -49,3 +49,31 @@ However, if you need it to be less interactive, you can pass the followings opti
 - `--mongodb`
 - `--postgres`
 - `--in-memory`
+
+## Deploy to Deno Deploy
+
+As easy as :
+```bash
+danet deploy
+```
+
+Here are the options: 
+```bash
+Usage: danet deploy
+
+Description:
+
+  Deploy your project to Deno Deploy
+
+Options:
+
+  -h, --help                      - Show this help.                                                                                    
+  -p, --project     <project>     - Deno deploy project name. If no value is given, Deno deploy will generate a                        
+                                    random name                                                                                        
+  -e, --entrypoint  <entrypoint>  - Bundle entrypoint file                                                       (Default: "run.ts")   
+  -b, --bundle      <bundle>      - Bundle output file name, also used as deployctl entrypoint                   (Default: "bundle.js")
+
+Commands:
+
+  help  [command]  - Show this help or the help of a sub-command.
+```
