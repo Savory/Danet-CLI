@@ -2,6 +2,7 @@ import { Command, HelpCommand } from './deps.ts';
 import { generateProject } from './generate.ts';
 import { runProject, runProjectWithWatch } from "./run.ts";
 import { bundleProject } from "./bundle.ts";
+import { deployToDenoDeploy } from './deployToDenoDeploy.ts';
 
 const program = new Command().name('danet')
 			.description('Danet CLI Interface')
@@ -27,6 +28,15 @@ program.command('start')
 
 program.command('bundle')
 	.description('Bundle project into a single file')
+	.option('-e, --entrypoint <entrypoint:string>', {
+		default: 'run.ts',
+	  })
 	.arguments('<name:string>').action(bundleProject);
+
+program.command('deploy').description('Deploy your project to Deno Deploy').option('-p, --project <project:string>', 'Deno deploy project name')
+.option('-e, --entrypoint <entrypoint:string>', 'Bundle entrypoint file', {
+	default: 'run.ts',
+  })
+  .option('-b, --bundle <bundle:string>', 'Bundle output file name, also used as deployctl entrypoint', { default: 'bundle.js' }).action(deployToDenoDeploy);
 
 await program.parse(Deno.args);

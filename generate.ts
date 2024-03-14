@@ -6,8 +6,7 @@ import {
 	Project,
 	ResolutionHosts,
 	SourceFile,
-	StructureKind,
-	toPathString,
+	StructureKind
 } from './deps.ts';
 const logger = new Logger('Danet-CLI');
 
