@@ -5,9 +5,11 @@ const bundleFolderExists = (folder: string) =>
 		.catch(() => false);
 
 export const bundleProject = async (
-	options: { entrypoint: string, bundlePath = './bundle' },
+	options: { entrypoint: string, bundlePath?: string},
 	name: string,
 ) => {
+    if (!bundlePath)
+        bundlePath = './bundle';
 	if (await bundleExists(bundlePath)) {
 		await Deno.remove(bundlePath, { recursive: true });
 	}
