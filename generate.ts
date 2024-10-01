@@ -18,7 +18,8 @@ export async function generateProject(options: GenerateOption, name: string) {
 		logger.log(`Danet's project creation done !
   You can run it with the following commands: cd ${name} && danet develop
   Tests can be run with: deno task test`);
-	} catch (e) {
+	// deno-lint-ignore no-explicit-any
+	} catch (e: any) {
 		logger.error(e.toString());
 	}
 }
@@ -67,8 +68,9 @@ function getDatabaseFromOptionOrAskUser(options: GenerateOption) {
 }
 
 function modifyDatabaseModule(baseDirectory: Directory, databaseName: string) {
-	const dbDirectory: Directory = baseDirectory?.getDirectory('src/database');
-	const dbModuleFile: SourceFile = dbDirectory?.getSourceFile('module.ts');
+	const dbDirectory: Directory = baseDirectory?.getDirectory('src/database')!;
+	const dbModuleFile: SourceFile = dbDirectory?.getSourceFile('module.ts')!;
+
 	const importDeclaration = dbModuleFile.getImportDeclarations()[1];
 	importDeclaration.remove();
 	dbModuleFile.addImportDeclaration({
@@ -80,10 +82,12 @@ function modifyDatabaseModule(baseDirectory: Directory, databaseName: string) {
 	);
 	const ModuleDeclaration = DatabaseClass.getDecorators().find((d) =>
 		d.getName() === 'Module'
-	);
+	)!;
 	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
-	const argumentProperties = moduleDeclarationArgument.getProperties();
-	const moduleInjectables = argumentProperties.find((p) =>
+	// deno-lint-ignore no-explicit-any
+	const argumentProperties = (moduleDeclarationArgument as any).getProperties();
+	// deno-lint-ignore no-explicit-any
+	const moduleInjectables = argumentProperties.find((p: any) =>
 		p.getName() === 'injectables'
 	);
 	moduleInjectables.set(
@@ -100,11 +104,11 @@ function modifyDatabaseModule(baseDirectory: Directory, databaseName: string) {
 			capitalize(databaseName)
 		}Service from DatabaseModule`,
 	);
-}
+	}
 
-function modifyTodoModule(baseDirectory, databaseName: string) {
-	const dbDirectory: Directory = baseDirectory?.getDirectory('src/todo');
-	const todoModule: SourceFile = dbDirectory?.getSourceFile('module.ts');
+function modifyTodoModule(baseDirectory: Directory, databaseName: string) {
+	const dbDirectory: Directory = baseDirectory?.getDirectory('src/todo')!;
+	const todoModule: SourceFile = dbDirectory?.getSourceFile('module.ts')!;
 	const importDeclaration = todoModule.getImportDeclarations()[4];
 	importDeclaration.remove();
 	todoModule.addImportDeclaration({
@@ -120,15 +124,18 @@ function modifyTodoModule(baseDirectory, databaseName: string) {
 	);
 	const ModuleDeclaration = DatabaseClass.getDecorators().find((d) =>
 		d.getName() === 'Module'
-	);
+	)!;
 	const moduleDeclarationArgument = ModuleDeclaration.getArguments()[0];
-	const argumentProperties = moduleDeclarationArgument.getProperties();
-	moduleDeclarationArgument.addProperty({
+	// deno-lint-ignore no-explicit-any
+	const argumentProperties = (moduleDeclarationArgument as any).getProperties();
+	// deno-lint-ignore no-explicit-any
+	(moduleDeclarationArgument as any).addProperty({
 		name: 'imports',
 		kind: StructureKind.PropertyAssignment,
 		initializer: `[DatabaseModule]`,
 	});
-	const moduleInjectables = argumentProperties.find((p) =>
+	// deno-lint-ignore no-explicit-any
+	const moduleInjectables = argumentProperties.find((p: any) =>
 		p.getName() === 'injectables'
 	);
 	moduleInjectables.set(
@@ -154,9 +161,10 @@ async function modifyModulesWithDatabaseService(
 	const project = new Project({
 		resolutionHost: ResolutionHosts.deno,
 		indentationText: IndentationText.TwoSpaces,
-	});
+	// deno-lint-ignore no-explicit-any
+	} as any);
 	project.addSourceFilesAtPaths(`${projectDirectory}/**/*.ts`);
-	const baseDirectory = project.getDirectory(`${projectDirectory}`);
+	const baseDirectory = project.getDirectory(`${projectDirectory}`)!;
 	modifyDatabaseModule(baseDirectory, databaseName);
 	modifyTodoModule(baseDirectory, databaseName);
 	await project.save();
@@ -188,14 +196,15 @@ function askWhichDBUserWants() {
 }
 
 async function overwriteIfPossibleOrQuit(name: string) {
-	const overwrite: string = prompt(
+	const overwrite: string | null = prompt(
 		`${name} folder may already exists, do you want to completely overwrite its content ? (y/N)`,
 		'N',
 	);
-	if (overwrite.toLowerCase() === 'y') {
+	if (overwrite?.toLowerCase() === 'y') {
 		try {
 			await Deno.remove(name, {recursive: true});
-		} catch (e) {
+		// deno-lint-ignore no-explicit-any
+		} catch (e: any) {
 			if (e.name !== 'NotFound')
 				console.log(e);
 		}
@@ -205,13 +214,11 @@ async function overwriteIfPossibleOrQuit(name: string) {
 async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	const repository = `https://github.com/Savory/Danet-Starter.git`;
 	logger.log(`Cloning starter project from ${repository} into ${name}`);
-	const p = Deno.run({
-		cmd: ['git', 'clone', '-b', 'jsr', repository, `${name}`],
-		stdout: 'null',
-		stderr: 'null',
-	});
-	const status = await p.status();
-	if (!status.success) {
+	const cloneCommand = new Deno.Command("git", {
+        args: [ 'clone', '-b', 'jsr', repository, `${name}`]
+    });
+	const { success, stdout } = await cloneCommand.output();
+	if (!success) {
 		throw new Error('Clone Failed');
 	}
 	await Deno.remove(`./${name}/.git`, { recursive: true });
