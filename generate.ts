@@ -206,7 +206,7 @@ async function cloneRepositoryAndDeleteGitFolder(name: string) {
 	const repository = `https://github.com/Savory/Danet-Starter.git`;
 	logger.log(`Cloning starter project from ${repository} into ${name}`);
 	const p = Deno.run({
-		cmd: ['git', 'clone', repository, `${name}`],
+		cmd: ['git', 'clone', '-b', 'jsr', repository, `${name}`],
 		stdout: 'null',
 		stderr: 'null',
 	});
