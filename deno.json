@@ -2,13 +2,7 @@
   "name": "@danet/cli",
   "version": "0.9.0",
   "exports": {
-    "./bundle.ts": "./bundle.ts",
-    "./generate.ts": "./generate.ts",
-    "./main.ts": "./main.ts",
-    "./deployToDenoDeploy.ts": "./deployToDenoDeploy.ts",
-    "./deps.ts": "./deps.ts",
-    "./run.ts": "./run.ts",
-    "./deno.json": "./deno.json"
+    ".": "./main.ts"
   },
   "fmt": {
     "options": {
@@ -28,7 +22,8 @@
   },
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@1.0.0-rc.7",
-    "@ts-morph/ts-morph": "jsr:@ts-morph/ts-morph",
+    "@ts-morph/ts-morph": "jsr:@ts-morph/ts-morph@23.0.0",
     "@danet/core": "jsr:@danet/core@2"
-  }
+  },
+  "license": "MIT"
 }

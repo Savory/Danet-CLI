@@ -1,13 +1,13 @@
-export const runProjectWithWatch = async () => {
-    const p = Deno.run({
-        cmd: ['deno', 'run', '--watch', '--allow-net', '--allow-read',  '--unstable',  '--allow-env', 'run.ts']
-    })
-    await p.status();
+export const runProjectWithWatch: () => void = async () => {
+    const command = new Deno.Command("deno", {
+        args: ['run', '--watch', '--allow-net', '--allow-read',  '--unstable',  '--allow-env', 'run.ts']
+    });
+    await command.output();
 }
 
-export const runProject = async () => {
-    const p = Deno.run({
-        cmd: ['deno', 'run', '--allow-net', '--allow-read',  '--unstable',  '--allow-env', 'run.ts']
-    })
-    await p.status();
+export const runProject: () => void = async () => {
+    const command = new Deno.Command("deno", {
+        args: ['run', '--allow-net', '--allow-read',  '--unstable',  '--allow-env', 'run.ts']
+    });
+    await command.output();
 }
