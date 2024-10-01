@@ -29,13 +29,13 @@ program.command('start')
 
 program.command('bundle')
 	.description('Bundle project into a single file')
-	.option('-e <entrypoint:string>, --entrypoint <entrypoint:string>', "Your danet entry file", {
+	.option('-e, --entrypoint <entrypoint:string>', "Your danet entry file", {
 		default: 'run.ts',
 	  })
 	.arguments('<name:string>').action(bundleProject);
 
-program.command('deploy').description('Deploy your project to Deno Deploy').option('-p  <bundle:string>, --project <project:string>', 'Deno deploy project name.', { required: true })
-.option('-e <entrypoint:string>, --entrypoint <entrypoint:string>', 'Bundle entrypoint file', {
+program.command('deploy').description('Deploy your project to Deno Deploy').option('-p, --project <project:string>', 'Deno deploy project name.', { required: true })
+.option('-e, --entrypoint <entrypoint:string>', 'Bundle entrypoint file', {
 	default: 'run.ts',
   })
   .option('-b <bundle:string>, --bundle <bundle:string>', 'Bundle output file name, also used as deployctl entrypoint', { default: 'bundle.js' }).action(deployToDenoDeploy);
