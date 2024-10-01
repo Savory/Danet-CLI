@@ -22,7 +22,7 @@
     "jsr:@std/path@~0.225.2": "0.225.2",
     "jsr:@std/text@~1.0.7": "1.0.7",
     "jsr:@ts-morph/common@0.24": "0.24.0",
-    "jsr:@ts-morph/ts-morph@*": "23.0.0",
+    "jsr:@ts-morph/ts-morph@23.0.0": "23.0.0",
     "npm:awesome-phonenumber@7.1.0": "7.1.0",
     "npm:handlebars@4.7.7": "4.7.7"
   },
@@ -452,7 +452,7 @@
     "dependencies": [
       "jsr:@cliffy/command@1.0.0-rc.7",
       "jsr:@danet/core@2",
-      "jsr:@ts-morph/ts-morph@*"
+      "jsr:@ts-morph/ts-morph@23.0.0"
     ]
   }
 }
