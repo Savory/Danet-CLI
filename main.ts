@@ -1,4 +1,4 @@
-import { Command, HelpCommand } from './deps.ts';
+import { Command } from './deps.ts';
 import { generateProject } from './generate.ts';
 import { runProject, runProjectWithWatch } from "./run.ts";
 import { bundleProject } from "./bundle.ts";
@@ -9,7 +9,6 @@ const program = new Command().name('danet')
 			.meta("deno", Deno.version.deno)
 			.meta("v8", Deno.version.v8)
 			.meta("typescript", Deno.version.typescript)
-			.command("help", new HelpCommand().global());
 
 program.command('new').arguments('<name:string>')
 	.description('Generate a new project')

@@ -1,5 +1,5 @@
-export { Logger } from 'https://deno.land/x/danet/src/logger.ts';
-export { Command, HelpCommand } from 'https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts';
+export { Logger } from '@danet/core/logger';
+export { Command } from '@cliffy/command';
 export {
 	ClassDeclaration,
 	Decorator,
@@ -9,4 +9,4 @@ export {
 	ResolutionHosts,
 	SourceFile,
 	StructureKind,
-} from 'https://deno.land/x/ts_morph@16.0.0/mod.ts';
+} from '@ts-morph/ts-morph';
