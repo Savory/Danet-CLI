@@ -16,7 +16,7 @@ In the future, it will assist in multiple ways, including scaffolding the projec
 Installing Deno packages as a commands is simple. You can install them under any name you want. For simplicity's sake, we install our danet-cli under the name `danet`.
 
 ```bash
-$ deno install --allow-read --allow-write --allow-run --allow-env -n danet https://deno.land/x/danet_cli/main.ts
+$ deno install --global -A -n danet jsr:@danet/cli
 ```
 
 ## Basic workflow
