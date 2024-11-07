@@ -1,3 +1,7 @@
+import * as esbuild from "npm:esbuild";
+import { denoPlugins } from "jsr:@luca/esbuild-deno-loader";
+
+
 
 const bundleFolderExists = (folder: string) =>
 	Deno.stat(folder)
@@ -15,10 +19,15 @@ export const bundleProject = async (
 	}
 
 	await Deno.mkdir(options.bundlePath);
-	
-	
-	const bundleCommand = new Deno.Command("deno", {
-        args: [ 'bundle', options.entrypoint, `${options.bundlePath}/${name}`]
-    });
-	await bundleCommand.output();
+
+	await esbuild.build({
+		plugins: [...denoPlugins({ loader: 'native'})],
+		entryPoints: [options.entrypoint],
+		outfile: `${options.bundlePath}/${name}`,
+		bundle: true,
+		format: "esm",
+		tsconfig: "tsconfig.json",
+	});
+
+	esbuild.stop();
 };
