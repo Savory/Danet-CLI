@@ -38,6 +38,8 @@ program.command('deploy').description('Deploy your project to Deno Deploy').opti
 .option('-e, --entrypoint <entrypoint:string>', 'Bundle entrypoint file', {
 	default: 'run.ts',
   })
-  .option('-b <bundle:string>, --bundle <bundle:string>', 'Bundle output file name, also used as deployctl entrypoint', { default: 'bundle.js' }).action(deployToDenoDeploy);
+  .option('-b <bundle:string>, --bundle <bundle:string>', 'Bundle output file name, also used as deployctl entrypoint', { default: 'bundle.js' })
+	.option('-t --token <token:string>', 'Deno Deploy API token.', { required: true})
+	.action(deployToDenoDeploy);
 
 await program.parse(Deno.args);
