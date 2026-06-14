@@ -18,11 +18,13 @@
     }
   },
   "tasks": {
-    "run": "deno run --allow-read --allow-write --allow-run --allow-env main.ts"
+    "run": "deno run --allow-read --allow-write --allow-run --allow-env main.ts",
+    "test": "NO_LOG=true deno test --allow-read --allow-write --allow-env"
   },
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@1.0.0-rc.7",
     "@ts-morph/ts-morph": "jsr:@ts-morph/ts-morph@23.0.0",
+    "@std/path": "jsr:@std/path@1",
     "@danet/core": "jsr:@danet/core@2"
   },
   "license": "MIT"

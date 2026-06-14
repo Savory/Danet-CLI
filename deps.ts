@@ -6,7 +6,10 @@ export {
 	Directory,
 	IndentationText,
 	Project,
+	QuoteKind,
 	ResolutionHosts,
 	SourceFile,
 	StructureKind,
+	SyntaxKind,
 } from '@ts-morph/ts-morph';
+export { dirname, relative } from '@std/path';

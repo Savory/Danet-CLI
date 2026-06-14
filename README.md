@@ -38,6 +38,70 @@ $ danet start  //run without file watching
 
 In your browser, open [http://localhost:3000](http://localhost:3000) to see the new application running.
 
+## Generating components
+
+Once inside a project, you can scaffold modules, controllers and services with the `generate` command (aliased as `g`), similar to the NestJS CLI:
+
+```bash
+$ danet generate <schematic> <name>
+$ danet g <schematic> <name>
+```
+
+Available schematics (with aliases):
+
+| Schematic    | Alias | Generates                          | Class created          |
+| ------------ | ----- | ---------------------------------- | ---------------------- |
+| `module`     | `mo`  | `src/<name>/module.ts`             | `<Name>Module`         |
+| `controller` | `co`  | `src/<name>/controller.ts`         | `<Name>Controller`     |
+| `service`    | `s`   | `src/<name>/service.ts`            | `<Name>Service`        |
+
+Each component is created in its own folder following the Danet folder convention. The name is normalized, so `danet g co user-profile`, `danet g co userProfile` and `danet g co UserProfile` all produce the folder `user-profile` and the class `UserProfileController`.
+
+```bash
+$ danet g module cat        # src/cat/module.ts        -> class CatModule
+$ danet g controller cat    # src/cat/controller.ts    -> class CatController
+$ danet g service cat       # src/cat/service.ts       -> class CatService
+```
+
+### Automatic module wiring
+
+By default, generated components are automatically registered in the relevant `@Module`:
+
+- a **controller** is added to the `controllers` array of its sibling `src/<name>/module.ts`;
+- a **service** is added to the `injectables` array of its sibling `src/<name>/module.ts`;
+- a **module** is added to the `imports` array of your root `src/app.module.ts`.
+
+For example, after running the three commands above, `src/cat/module.ts` becomes:
+
+```typescript
+import { Module } from '@danet/core';
+import { CatController } from './controller.ts';
+import { CatService } from './service.ts';
+
+@Module({
+  controllers: [CatController],
+  injectables: [CatService],
+})
+export class CatModule {}
+```
+
+Wiring is skipped (without error) when the target module file cannot be found. To opt out of wiring entirely, pass `--skip-import`:
+
+```bash
+$ danet g controller cat --skip-import
+```
+
+### Options
+
+```bash
+Usage: danet generate <schematic> <name>
+
+Options:
+
+  -p, --path <path>  - Directory the component folder is created in.   (Default: "src")
+  --skip-import      - Do not register the component in its module.
+```
+
 ## Database Options
 
 When creating a new project, Danet CLI will ask you what database provider you want to use between `mongodb`, `postgres` and `in-memory` and will generate all the required code.
