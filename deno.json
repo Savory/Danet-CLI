@@ -25,7 +25,7 @@
     "@cliffy/command": "jsr:@cliffy/command@1.0.0-rc.7",
     "@ts-morph/ts-morph": "jsr:@ts-morph/ts-morph@23.0.0",
     "@std/path": "jsr:@std/path@1",
-    "@danet/core": "jsr:@danet/core@2"
+    "@danet/core": "jsr:@danet/core@2.11"
   },
   "license": "MIT"
 }
