@@ -13,9 +13,20 @@
       "exclude": [
         "node_modules/",
         "coverage/",
-        "doc/"
+        "doc/",
+        "graphify-out/",
+        ".claude/",
+        "openspec/"
       ]
     }
+  },
+  "publish": {
+    "exclude": [
+      ".github",
+      "graphify-out/",
+      ".claude/",
+      "openspec/"
+    ]
   },
   "tasks": {
     "run": "deno run --allow-read --allow-write --allow-run --allow-env main.ts",
